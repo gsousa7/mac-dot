@@ -1,0 +1,76 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = false
+
+format = "$directory$os$git_branch$git_status$kubernetes$gcloud$nodejs$rust$golang$php $character"
+
+[os]
+disabled = false
+format = "[$symbol](#blue) "
+
+[os.symbols]
+Ubuntu  = "󰕈"
+Artix   = "󰣇"
+Arch    = "󰣇"
+CachyOS = "󰣇"
+Macos   = ""
+
+[directory]
+format            = "[$path](cyan) "
+truncation_length = 4
+truncate_to_repo  = true
+
+[git_branch]
+symbol = ""
+format = "[$symbol $branch](bold purple) "
+
+[git_status]
+format     = "($ahead_behind$staged$modified$untracked$deleted$conflicted)"
+ahead      = "[⇡$count ](bold cyan)"
+behind     = "[⇣$count ](bold cyan)"
+diverged   = "[⇡$ahead_count⇣$behind_count ](bold cyan)"
+staged     = "[+$count ](bold green)"
+modified   = "[●$count ](bold yellow)"
+untracked  = "[?$count ](bold white)"
+deleted    = "[✘$count ](bold red)"
+conflicted = "[⚡$count ](bold red)"
+
+# --- DevOps: mostra cluster/namespace k8s ativo ---
+[kubernetes]
+disabled = false
+symbol   = "󱃾 "
+format   = '[$symbol$context( \($namespace\))](bold blue) '
+# Só mostra em diretórios com manifests/charts, para não poluir sempre:
+detect_files       = ['Chart.yaml', 'kustomization.yaml', 'skaffold.yaml']
+detect_extensions  = []
+[kubernetes.context_aliases]
+# exemplo — encurta ARNs de EKS: "arn:aws:eks:eu-central-1:123:cluster/prd" -> "prd"
+".*:cluster/(?P<c>[\\w-]+)" = "$c"
+
+# --- gcloud: projeto ativo ---
+[gcloud]
+disabled = false
+symbol   = " "
+format   = '[$symbol$project]($style) '
+style    = "bold yellow"
+
+[nodejs]
+symbol = ""
+format = "[$symbol $version](green) "
+
+[rust]
+symbol = ""
+format = "[$symbol $version](red) "
+
+[golang]
+symbol = ""
+format = "[$symbol $version](cyan) "
+
+[php]
+symbol = ""
+format = "[$symbol $version](purple) "
+
+[character]
+success_symbol = "[❯](green)"
+error_symbol   = "[❯](red)"
+vimcmd_symbol  = "[❮](blue)"
