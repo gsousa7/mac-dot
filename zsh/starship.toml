@@ -41,7 +41,7 @@ renamed    = "[»$count ](bold blue)"
 deleted    = "[✘$count ](bold red)"
 stashed    = "[≡$count ](bold magenta)"
 untracked  = "[?$count ](bold white)"
-conflicted = "[⚡$count ](bold red)"
+conflicted = "[$count ](bold red)"
 
 # ---- Kubernetes (always-on: contexto + namespace) ----
 [kubernetes]
