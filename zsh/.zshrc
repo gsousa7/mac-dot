@@ -55,5 +55,9 @@ for _mod in exports plugins aliases git kubectl functions bindings cheatsheet pr
 done
 unset _mod
 
+# ---- Overrides por máquina (não versionado; ver local.zsh.example) ----
+# Proxy corporativo, gcloud, paths específicos, etc. vivem aqui.
+[[ -r "$ZDOTDIR/local.zsh" ]] && source "$ZDOTDIR/local.zsh"
+
 # ---- Splash ----
 [[ -o interactive && -z $TMUX ]] && command -v fastfetch >/dev/null && fastfetch

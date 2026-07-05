@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
 # install.sh — provisionador de máquina (Ubuntu/apt + macOS/brew)
-#   ./install.sh -i -n <user> -m <email> -b <main|master>   instalar
-#   ./install.sh -u                                          atualizar
-#   ./install.sh -i --dry-run                                simular (não altera nada)
+#   ./install.sh -i             instalar
+#   ./install.sh -u             atualizar
+#   ./install.sh -i --dry-run   simular (não altera nada)
 #
 # Shell alvo: zsh (config frameworkless em ZDOTDIR).
 # =========================================================
@@ -387,25 +387,6 @@ set_default_shell() {
 }
 
 # =========================================================
-# Git config (interativo ou via -n/-m/-b)
-# =========================================================
-update_gitconfig() {
-  log "Configuração do Git..."
-  [ -z "${git_user:-}" ]  && read -rp "Git username: " git_user
-  [ -z "${git_email:-}" ] && read -rp "Git email: " git_email
-  [ -z "${git_branch:-}" ] && read -rp "Branch inicial (main/master): " git_branch
-  if [ "$DRY_RUN" -eq 0 ]; then
-    git config --global user.name "$git_user"
-    git config --global user.email "$git_email"
-    git config --global init.defaultBranch "$git_branch"
-  fi
-  log "Git configurado: $git_user <$git_email> (branch $git_branch)."
-  if [ ! -f "$HOME/.ssh/id_ed25519.pub" ] && [ ! -f "$HOME/.ssh/id_rsa.pub" ]; then
-    warn "Sem chave SSH. Cria com: ssh-keygen -t ed25519 -C \"$git_email\" e adiciona ao GitHub."
-  fi
-}
-
-# =========================================================
 # vim: vim-plug + plugins
 # =========================================================
 install_vim() {
@@ -465,25 +446,22 @@ update_everything() {
 usage() {
   cat <<EOF
 Uso:
-  ./install.sh -i -n <user> -m <email> -b <main|master>   instalar tudo
-  ./install.sh -u                                          atualizar
-  ./install.sh -i --dry-run                                simular
+  ./install.sh -i             instalar tudo
+  ./install.sh -u             atualizar
+  ./install.sh -i --dry-run   simular
 Opções:
-  -i            instalar        -u   atualizar
-  -n <user>     git username    -m <email>  git email    -b <main|master>
+  -i            instalar
+  -u            atualizar
   --dry-run     não altera nada
   -h            ajuda
 EOF
 }
 
-action=""; git_user=""; git_email=""; git_branch=""
+action=""
 while [ $# -gt 0 ]; do
   case "$1" in
     -i) action="install"; shift ;;
     -u) action="update"; shift ;;
-    -n) git_user="$2"; shift 2 ;;
-    -m) git_email="$2"; shift 2 ;;
-    -b) git_branch="$2"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) err "Argumento desconhecido: $1"; usage; exit 1 ;;
@@ -517,7 +495,6 @@ case "$action" in
     install_fonts
     link_dotfiles
     set_default_shell
-    update_gitconfig
     install_vim
     install_tmux
     echo
