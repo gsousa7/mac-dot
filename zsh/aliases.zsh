@@ -27,7 +27,7 @@ alias lta4="eza -lTag --level=4 --color=auto --icons --sort=Name --group-directo
 compdef eza=ls   # reaproveita a completion do ls para o eza
 
 # ---- bat (cat moderno) ----
-alias cat="bat -p --no-paging --color=always"
+alias bat="bat -p --no-paging --color=always"
 alias bats="bat -pn --no-paging"
 
 # ---- grep com cor ----
@@ -59,7 +59,7 @@ alias wdir='cd $HOME/work'
 alias gdir='cd $HOME/git'
 alias gpdir='cd $HOME/git/personal'
 alias gwdir='cd $HOME/git/work'
-alias ddir='cd $HOME/git/personal/mac-dotfiles'   # corrigido (era ~/git/mac-dotfiles)
+alias ddir='cd $HOME/git/personal/mac-dot'   # corrigido (era ~/git/mac-dotfiles)
 alias zdir='cd $ZDOTDIR'
 
 # ---- editores ----

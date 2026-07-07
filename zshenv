@@ -14,3 +14,4 @@ export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
 
 # Starship lê o toml daqui
 export STARSHIP_CONFIG="$ZDOTDIR/starship.toml"
+. "$HOME/.cargo/env"
