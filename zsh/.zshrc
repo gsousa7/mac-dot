@@ -64,3 +64,4 @@ unset _mod
 
 # Created by `pipx` on 2026-07-07 16:02:26
 export PATH="$PATH:/Users/goncalo.sousa/.local/bin"
+eval "$(register-python-argcomplete pipx)"
