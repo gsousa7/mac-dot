@@ -34,12 +34,14 @@ WANT_ANSIBLE=1
 WANT_BREW_ON_LINUX=1
 WANT_TLDR=1
 WANT_FONTS=1
+WANT_GHOSTTY=1
 SET_DEFAULT_SHELL_ZSH=1
 
 # Fonts Nerd a instalar (nome base do nerd-fonts / cask do brew)
 NERD_FONTS=(JetBrainsMono Meslo)
 
 DRY_RUN=0
+SKIP_PROMPTS=0
 
 # =========================================================
 # Cores + logging
@@ -185,6 +187,34 @@ install_starship() {
   log "A instalar Starship..."
   if [ "$PM" = "brew" ]; then run brew install starship
   else run_sh 'curl -sS https://starship.rs/install.sh | sh -s -- -y'; fi
+}
+
+# =========================================================
+# Ghostty (terminal) — só via Homebrew
+# =========================================================
+install_ghostty() {
+  [ "$WANT_GHOSTTY" -eq 1 ] || return 0
+  if ! have brew; then
+    warn "Homebrew não encontrado; a saltar Ghostty (instala o Homebrew primeiro)."
+    return 0
+  fi
+
+  if have ghostty; then
+    log "Ghostty já instalado."
+  else
+    log "A instalar Ghostty..."
+    if [ "$OS" = "macos" ]; then
+      run brew install --cask ghostty
+    else
+      run brew install ghostty || warn "Ghostty indisponível neste Homebrew (Linux); instala manualmente."
+    fi
+  fi
+
+  if [ -f "$DOTFILES_DIR/ghostty.config" ]; then
+    run mkdir -p "$XDG_CONFIG_HOME/ghostty"
+    run ln -sfn "$DOTFILES_DIR/ghostty.config" "$XDG_CONFIG_HOME/ghostty/config"
+    log "Config do Ghostty linkada."
+  fi
 }
 
 # =========================================================
@@ -441,17 +471,61 @@ update_everything() {
 }
 
 # =========================================================
+# Seleção interativa de tools (WANT_*)
+# =========================================================
+# Pergunta $1, guarda em $2 (nome de uma variável WANT_*/SET_*).
+# Enter mantém o valor atual (mostrado como default no prompt).
+ask_yn() {
+  local prompt="$1" var="$2" default hint ans
+  default="${!var}"
+  hint="y/N"; [ "$default" -eq 1 ] && hint="Y/n"
+  read -rp "  $prompt [$hint]: " ans
+  case "$ans" in
+    "") ;;
+    y|Y|yes|s|S|sim) printf -v "$var" '1' ;;
+    n|N|no|nao|não) printf -v "$var" '0' ;;
+    *) echo "    resposta inválida — mantido: $([ "$default" -eq 1 ] && echo sim || echo não)" ;;
+  esac
+}
+
+prompt_tool_selection() {
+  [ "$SKIP_PROMPTS" -eq 1 ] && return 0
+  if [ ! -t 0 ]; then
+    warn "Sem TTY — a instalar com a seleção por omissão (edita os WANT_* no topo do script para mudar)."
+    return 0
+  fi
+
+  echo
+  log "Escolhe as ferramentas a instalar (Enter = manter o valor por omissão):"
+  ask_yn "kubectl"                              WANT_KUBECTL
+  ask_yn "kubectx/kubens"                       WANT_KUBECTX
+  ask_yn "AWS CLI"                               WANT_AWSCLI
+  ask_yn "Azure CLI"                             WANT_AZURECLI
+  ask_yn "Terraform"                             WANT_TERRAFORM
+  ask_yn "Rust/Cargo"                            WANT_RUST
+  ask_yn "Ansible"                               WANT_ANSIBLE
+  [ "$OS" = "linux" ] && ask_yn "Homebrew no Linux (eza/fastfetch/glow)" WANT_BREW_ON_LINUX
+  ask_yn "tldr (via pipx)"                       WANT_TLDR
+  ask_yn "Nerd Fonts (${NERD_FONTS[*]})"         WANT_FONTS
+  ask_yn "Ghostty (terminal, via Homebrew)"      WANT_GHOSTTY
+  ask_yn "Definir zsh como shell por omissão"    SET_DEFAULT_SHELL_ZSH
+  echo
+}
+
+# =========================================================
 # Main
 # =========================================================
 usage() {
   cat <<EOF
 Uso:
-  ./install.sh -i             instalar tudo
+  ./install.sh -i             instalar (pergunta que tools instalar)
+  ./install.sh -i -y          instalar sem perguntas (usa os WANT_* do topo do script)
   ./install.sh -u             atualizar
   ./install.sh -i --dry-run   simular
 Opções:
   -i            instalar
   -u            atualizar
+  -y, --yes     salta as perguntas de seleção de tools
   --dry-run     não altera nada
   -h            ajuda
 EOF
@@ -462,6 +536,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     -i) action="install"; shift ;;
     -u) action="update"; shift ;;
+    -y|--yes) SKIP_PROMPTS=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) err "Argumento desconhecido: $1"; usage; exit 1 ;;
@@ -477,6 +552,7 @@ fi
 mkdir -p "$BACKUP_DIR"
 [ "$DRY_RUN" -eq 1 ] && warn "DRY-RUN — nada será alterado."
 detect_os
+[ "$action" = "install" ] && prompt_tool_selection
 
 case "$action" in
   install)
@@ -484,6 +560,7 @@ case "$action" in
     install_homebrew
     install_packages
     install_starship
+    install_ghostty
     install_rust
     install_pipx_tools
     install_ansible

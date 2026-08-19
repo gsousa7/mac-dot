@@ -10,6 +10,10 @@ export LANG='en_US.UTF-8'
 export LC_ALL='en_US.UTF-8'
 export GREP_COLORS='mt=1;36'
 
+# ---- PATH (binários locais do utilizador: pipx, kubectl no Linux, ...) ----
+export PATH="$HOME/.local/bin:$PATH"
+command -v register-python-argcomplete >/dev/null 2>&1 && eval "$(register-python-argcomplete pipx)"
+
 # ---- less com cor ----
 export LESS="R --use-color"
 export LESS_TERMCAP_mb=$'\e[1;32m'

@@ -35,6 +35,10 @@ alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
 
+# ---- ripgrep ----
+alias rg="rg --hidden --smart-case --glob='!.git/' --no-search-zip --trim --colors=line:style:bold --colors=path:fg:magenta --colors=match:style:nobold"
+alias rga="rg --hidden --no-ignore --binary --force-text --smart-case --trim"
+
 # ---- data / meteo ----
 alias data='echo $(date "+%d/%m/%Y %H:%M:%S")'
 alias tempolx='curl wttr.in/Lisboa\?format=4'
@@ -68,8 +72,15 @@ alias svim='sudo vim'
 
 # ---- macOS ----
 alias finder='open .'
-alias clip='pbcopy'
-alias paste='pbpaste'
+
+# ---- clipboard (pbcopy/pbpaste no mac, xclip no Linux) ----
+if [[ "$OSTYPE" == darwin* ]]; then
+  alias clip='pbcopy'
+  alias paste='pbpaste'
+elif command -v xclip >/dev/null 2>&1; then
+  alias clip='xclip -selection clipboard'
+  alias paste='xclip -selection clipboard -o'
+fi
 
 # ---- tmux ----
 alias t='tmux'

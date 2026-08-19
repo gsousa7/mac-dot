@@ -1,3 +1,3 @@
 
-# Created by `pipx` on 2026-07-07 16:02:26
-export PATH="$PATH:/Users/goncalo.sousa/.local/bin"
+# Overrides por máquina que precisam de correr em shells de login (login-only)
+# vivem aqui. Ver zsh/local.zsh.example para overrides de shells interativas.

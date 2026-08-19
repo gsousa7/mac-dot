@@ -1,0 +1,16 @@
+# =========================================================
+# local.zsh.example — overrides por máquina (copiar para local.zsh)
+#
+# local.zsh não é versionado (.gitignore) e é carregado por último
+# pelo .zshrc, depois de todos os módulos em zsh/*.zsh. Usa-o para
+# o que for específico desta máquina/conta e não deve ir para o repo:
+# proxy corporativo, certificados, paths extra, segredos, etc.
+# =========================================================
+
+# export HTTPS_PROXY="http://proxy.corp.example:8080"
+# export NO_PROXY="localhost,127.0.0.1,.corp.example"
+
+# export GOOGLE_CLOUD_SDK_HOME="$HOME/google-cloud-sdk"
+# [[ -f "$GOOGLE_CLOUD_SDK_HOME/path.zsh.inc" ]] && source "$GOOGLE_CLOUD_SDK_HOME/path.zsh.inc"
+
+# alias wdir='cd $HOME/work/client-x'

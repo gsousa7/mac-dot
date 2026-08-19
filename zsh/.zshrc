@@ -61,7 +61,3 @@ unset _mod
 
 # ---- Splash ----
 [[ -o interactive && -z $TMUX ]] && command -v fastfetch >/dev/null && fastfetch
-
-# Created by `pipx` on 2026-07-07 16:02:26
-export PATH="$PATH:/Users/goncalo.sousa/.local/bin"
-eval "$(register-python-argcomplete pipx)"
