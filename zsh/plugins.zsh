@@ -33,5 +33,7 @@ _zplugin_load jeffreytse       zsh-vi-mode
 _zplugin_load zdharma-continuum fast-syntax-highlighting
 
 # Tuning do autosuggestions
+# Nota: se sentires lentidão ao digitar, remove 'completion' de ZSH_AUTOSUGGEST_STRATEGY.
+# A estratégia 'completion' é extremamente útil, mas pode ser pesada em repositórios grandes.
 ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'

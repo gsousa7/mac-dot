@@ -30,15 +30,57 @@ setopt PUSHD_IGNORE_DUPS
 setopt PUSHD_SILENT
 
 # ---- Completion ----
-autoload -Uz compinit
 _compdump="$XDG_CACHE_HOME/zsh/zcompdump"
 mkdir -p "${_compdump:h}"
-compinit -d "$_compdump"
+
+# Instala e adiciona zsh-completions ao fpath se não estiver instalado
+ZPLUGINDIR="${ZDOTDIR:-$HOME/.config/zsh}/plugins"
+if [[ ! -d "$ZPLUGINDIR/zsh-completions" ]]; then
+  echo "Installing zsh-completions..."
+  git clone --depth=1 "https://github.com/zsh-users/zsh-completions" "$ZPLUGINDIR/zsh-completions"
+fi
+fpath=("$ZPLUGINDIR/zsh-completions/src" $fpath)
+
+# Garantir fpaths do Homebrew antes de inicializar o compinit
+[[ -d /opt/homebrew/share/zsh/site-functions ]] && fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
+[[ -d /usr/local/share/zsh/site-functions ]] && fpath=(/usr/local/share/zsh/site-functions $fpath)
+
+autoload -Uz compinit
+
+# Carrega compinit otimizado (usa cache se tiver menos de 24 horas)
+if [[ -s "$_compdump" ]]; then
+  local _mtime
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    _mtime=$(stat -f '%m' "$_compdump" 2>/dev/null)
+  else
+    _mtime=$(stat -c '%Y' "$_compdump" 2>/dev/null)
+  fi
+  
+  if [[ -n "$_mtime" ]] && (( $(date +%s) - _mtime < 86400 )); then
+    compinit -C -d "$_compdump"
+  else
+    compinit -d "$_compdump"
+  fi
+else
+  compinit -d "$_compdump"
+fi
+
 autoload -Uz +X bashcompinit && bashcompinit   # para completions estilo bash (gcloud)
+
+# ---- Configuração do Menu de Autocomplete (zstyle) ----
 zstyle ':completion:*' menu select
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'   # case-insensitive
+# Case-insensitive e correspondência parcial (e.g. f.b -> foo.bar)
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 zstyle ':completion:*' cache-path "$XDG_CACHE_HOME/zsh/zcompcache"
 zstyle ':completion:*' use-cache on
+
+# Cores e Visual Moderno
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"     # Se LS_COLORS estiver definido, usa-o
+zstyle ':completion:*' group-name ''                         # Agrupa por categoria
+zstyle ':completion:*:descriptions' format '%F{yellow}-- %d --%f'
+zstyle ':completion:*:messages' format '%F{purple}%d%f'
+zstyle ':completion:*:warnings' format '%F{red}Sem correspondências para:%f %d'
+
 unset _compdump
 
 # ---- Módulos (a ordem importa) ----
