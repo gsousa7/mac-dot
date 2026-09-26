@@ -34,6 +34,85 @@ function grename() {
   fi
 }
 
+function gpull() {
+  # 1. Garantir que estamos num repositório git
+  if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+    print "\e[31mErro: Não estás num repositório Git!\e[0m"
+    return 1
+  fi
+
+  # 2. Obter o upstream (remoto associado)
+  local upstream
+  upstream=$(git rev-parse --abbrev-ref @{u} 2>/dev/null)
+
+  # Se não houver upstream configurado, faz git pull normal e deixa o Git decidir/avisar
+  if [[ -z "$upstream" ]]; then
+    print "\e[33mNenhum upstream configurado para esta branch. A tentar git pull normal...\e[0m"
+    git pull "$@"
+    return $?
+  fi
+
+  print "\e[34m[1/3] A atualizar referências remotas (git fetch)...\e[0m"
+  # Fetch silencioso para o upstream correspondente
+  local remote="${upstream%%/*}"
+  local branch="${upstream#*/}"
+  git fetch "$remote" "$branch" --quiet
+
+  print "\e[34m[2/3] A verificar conflitos potenciais com $upstream...\e[0m"
+  
+  # Usar git merge-tree para simular o merge inteiramente em memória (seguro com uncommitted changes)
+  local conflicts
+  conflicts=$(git merge-tree --name-only HEAD "$upstream" 2>/dev/null)
+  local exit_code=$?
+
+  # Se o exit_code for 1 ou se houver ficheiros em conflito
+  if (( exit_code == 1 )) && [[ -n "$conflicts" ]]; then
+    print "\e[31m⚠️  ALERTA: Foram detetados conflitos de merge!\e[0m"
+    print "\e[33mFicheiros que vão entrar em conflito:\e[0m"
+    print "$conflicts" | sed 's/^/  - /'
+    print ""
+    echo -n -e "\e[35mQueres continuar com o git pull mesmo assim? (y/N): \e[0m"
+    read -r response
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+      print "\e[34m[3/3] A efetuar git pull...\e[0m"
+      git pull "$@"
+    else
+      print "\e[31mPull abortado. Nenhum ficheiro foi alterado.\e[0m"
+      return 1
+    fi
+  else
+    print "\e[32m✅ Sem conflitos detetados! Seguro avançar.\e[0m"
+    print "\e[34m[3/3] A efetuar git pull...\e[0m"
+    git pull "$@"
+  fi
+}
+
+function gpall() {
+  local found_repos=0
+
+  # Iterar por todas as pastas no diretório atual
+  for dir in */; do
+    # Remover a barra final do nome da pasta para apresentação
+    local repo_name="${dir%/}"
+
+    # Verificar se a subpasta é um repositório git (tem uma pasta .git ou é worktree)
+    if [[ -d "$dir/.git" ]] || git -C "$dir" rev-parse --is-inside-work-tree &>/dev/null; then
+      found_repos=1
+      print -P "\n\e[36m========== Repositório: %F{cyan}${repo_name}%f ==========\e[0m"
+      
+      # Entrar na pasta do repositório, executar gpull, e voltar para a pasta original via subshell
+      (
+        cd "$dir" || return
+        gpull "$@"
+      )
+    fi
+  done
+
+  if (( found_repos == 0 )); then
+    print "\e[33mNenhum subrepositório Git encontrado no diretório atual.\e[0m"
+  fi
+}
+
 # ---- base ----
 alias g='git'
 alias ga='git add'
@@ -70,7 +149,8 @@ alias gpd='git push --dry-run'
 alias gpf='git push --force-with-lease'
 alias 'gpf!'='git push --force'
 alias gpsup='git push --set-upstream origin $(current_branch)'
-alias gl='git pull'
+alias gl='gpull'
+alias gpall='gpall'
 alias ggl='git pull origin $(current_branch)'
 alias ggp='git push origin $(current_branch)'
 alias gf='git fetch'

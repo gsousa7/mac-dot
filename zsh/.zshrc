@@ -5,9 +5,24 @@
 
 ZDOTDIR="${ZDOTDIR:-$HOME/.config/zsh}"
 
+# ---- Recuperar fpath padrão se herdado incorretamente do VS Code / subshells ----
+# Quando o FPATH é exportado (e.g. pelo Homebrew), o Zsh pode ignorar a inicialização
+# dos caminhos de funções padrão do sistema (como compinit, is-at-least, etc.).
+local -a _compinit_test; _compinit_test=( ${^fpath}/compinit(N) )
+if (( ${#_compinit_test} == 0 )); then
+  local -a _default_fpath
+  _default_fpath=( ${(f)"$(echo "print -l \$fpath" | env -u FPATH zsh -f 2>/dev/null)"} )
+  if (( ${#_default_fpath} > 0 )); then
+    fpath=( $fpath $_default_fpath )
+  fi
+  unset _default_fpath
+fi
+unset _compinit_test
+
 # ---- Homebrew (Apple Silicon) — cedo, para o resto ter o PATH ----
 if [[ -x /opt/homebrew/bin/brew ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
+  typeset +x FPATH # Evita que o FPATH seja exportado e quebre subshells / VS Code
 fi
 
 # ---- History (XDG) ----
