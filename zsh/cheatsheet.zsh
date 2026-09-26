@@ -133,7 +133,7 @@ tmuxfo() {
     echo -e "${MAGENTA}Ctrl a w${RESET}                  - List windows"
     echo -e "${MAGENTA}Ctrl a ,${RESET} or ${MAGENTA}trew${RESET}          - Rename current window"
     echo -e "${MAGENTA}Ctrl a m${RESET}             - Move window to specific index"
-    echo -e "${MAGENTA}Alt 1-5${RESET}                 - Jump to window <1-9>"
+    echo -e "${MAGENTA}Alt 1-5${RESET}                 - Jump to window 1-5"
     echo -e "${MAGENTA}tmux list-windows${RESET} or ${MAGENTA}tw${RESET}   - List windows"
     echo
 
@@ -192,6 +192,8 @@ tmuxfo() {
     echo -e "${MAGENTA}Ctrl a Alt u${RESET}              - Uninstall removed plugins"
     echo -e "${MAGENTA}Ctrl a S${RESET}             - Save tmux session (tmux-resurrect)"
     echo -e "${MAGENTA}Ctrl a Ctrl r${RESET}             - Restore tmux session (tmux-resurrect)"
+    echo -e "${YELLOW}tmux-continuum auto-saves in the background and auto-restores the layout the next${RESET}"
+    echo -e "${YELLOW}time you start tmux - no keybind needed, but it won't launch tmux for you after a reboot.${RESET}"
     echo
 
     echo -e "${ORANGE}Advanced session commands${RESET}"
@@ -554,7 +556,8 @@ zfo() {
         echo -e "${MAGENTA}gpf       ${RESET} — git push --force-with-lease"
         echo -e "${MAGENTA}gpf!      ${RESET} — git push --force"
         echo -e "${MAGENTA}gpsup     ${RESET} — git push --set-upstream origin \$(current_branch)"
-        echo -e "${MAGENTA}gl        ${RESET} — git pull"
+        echo -e "${MAGENTA}gl        ${RESET} — gpull: git pull com verificação prévia de conflitos (pede confirmação)"
+        echo -e "${MAGENTA}gpall     ${RESET} — gpull em todos os repos git das subpastas do diretório atual"
         echo -e "${MAGENTA}ggl       ${RESET} — git pull origin \$(current_branch)"
         echo -e "${MAGENTA}ggp       ${RESET} — git push origin \$(current_branch)"
         echo -e "${MAGENTA}gf        ${RESET} — git fetch"
@@ -718,7 +721,7 @@ zfo() {
 # =========================================================
 # keys — cheatsheet do window-management (AeroSpace/AltTab/Sketchybar)
 # =========================================================
-typeset -g KEYS_MD="${KEYS_MD:-$HOME/git/personal/mac-dotfiles/cheatsheet.md}"
+typeset -g KEYS_MD="${KEYS_MD:-$HOME/git/personal/mac-dot/cheatsheet.md}"
 
 _keys_header()  { printf '\n\033[1;36m━━ %s ━━\033[0m\n\n' "$1"; }
 _keys_row()     { printf '  \033[1;33m%-26s\033[0m %s\n' "$1" "$2"; }

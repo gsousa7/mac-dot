@@ -34,18 +34,18 @@ function grename() {
   fi
 }
 
+# gpull — git pull que antes simula o merge (git merge-tree, em memória) e
+# pede confirmação se houver conflitos. Requer git >= 2.38.
 function gpull() {
-  # 1. Garantir que estamos num repositório git
   if ! git rev-parse --is-inside-work-tree &>/dev/null; then
     print "\e[31mErro: Não estás num repositório Git!\e[0m"
     return 1
   fi
 
-  # 2. Obter o upstream (remoto associado)
   local upstream
-  upstream=$(git rev-parse --abbrev-ref @{u} 2>/dev/null)
+  upstream=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null)
 
-  # Se não houver upstream configurado, faz git pull normal e deixa o Git decidir/avisar
+  # Sem upstream: git pull normal e deixa o Git decidir/avisar
   if [[ -z "$upstream" ]]; then
     print "\e[33mNenhum upstream configurado para esta branch. A tentar git pull normal...\e[0m"
     git pull "$@"
@@ -53,59 +53,68 @@ function gpull() {
   fi
 
   print "\e[34m[1/3] A atualizar referências remotas (git fetch)...\e[0m"
-  # Fetch silencioso para o upstream correspondente
-  local remote="${upstream%%/*}"
-  local branch="${upstream#*/}"
-  git fetch "$remote" "$branch" --quiet
+  git fetch --quiet || return
+
+  if [[ -z "$(git rev-list HEAD..@{u} 2>/dev/null)" ]]; then
+    print "\e[32m✅ Já está atualizado com $upstream.\e[0m"
+    return 0
+  fi
 
   print "\e[34m[2/3] A verificar conflitos potenciais com $upstream...\e[0m"
-  
-  # Usar git merge-tree para simular o merge inteiramente em memória (seguro com uncommitted changes)
-  local conflicts
-  conflicts=$(git merge-tree --name-only HEAD "$upstream" 2>/dev/null)
-  local exit_code=$?
 
-  # Se o exit_code for 1 ou se houver ficheiros em conflito
-  if (( exit_code == 1 )) && [[ -n "$conflicts" ]]; then
-    print "\e[31m⚠️  ALERTA: Foram detetados conflitos de merge!\e[0m"
-    print "\e[33mFicheiros que vão entrar em conflito:\e[0m"
-    print "$conflicts" | sed 's/^/  - /'
+  # merge-tree só compara commits (HEAD vs upstream). Output com --name-only:
+  # 1ª linha = OID da tree resultante, restantes = ficheiros em conflito.
+  local out exit_code
+  out=$(git merge-tree --write-tree --name-only --no-messages HEAD @{u} 2>/dev/null)
+  exit_code=$?
+  local -a lines=( ${(f)out} ) conflicts
+  (( exit_code == 1 )) && conflicts=( ${lines[2,-1]} )
+
+  # Alterações locais não commitadas em ficheiros que o upstream também muda
+  # (o git pull recusa-se a avançar nesses casos).
+  local -a changed dirty overlap
+  changed=( ${(f)"$(git diff --name-only HEAD...@{u})"} )
+  dirty=( ${(f)"$(git diff --name-only HEAD)"} )
+  overlap=( ${changed:*dirty} )
+
+  if (( exit_code > 1 )); then
+    print "\e[33mNão foi possível simular o merge (git < 2.38?). A avançar sem verificação.\e[0m"
+  elif (( exit_code == 1 || ${#overlap} )); then
+    if (( ${#conflicts} )); then
+      print "\e[31m⚠️  ALERTA: Foram detetados conflitos de merge!\e[0m"
+      print "\e[33mFicheiros que vão entrar em conflito:\e[0m"
+      print -l -- "  - "${^conflicts}
+    fi
+    if (( ${#overlap} )); then
+      print "\e[31m⚠️  Alterações locais não commitadas em ficheiros alterados no remoto:\e[0m"
+      print -l -- "  - "${^overlap}
+      print "\e[33m(o git pull vai recusar; faz commit/stash antes, ou usa gupa)\e[0m"
+    fi
     print ""
-    echo -n -e "\e[35mQueres continuar com o git pull mesmo assim? (y/N): \e[0m"
-    read -r response
-    if [[ "$response" =~ ^[Yy]$ ]]; then
-      print "\e[34m[3/3] A efetuar git pull...\e[0m"
-      git pull "$@"
-    else
+    local response
+    read -r "response?$(print '\e[35mQueres continuar com o git pull mesmo assim? (y/N): \e[0m')"
+    if [[ "$response" != [Yy] ]]; then
       print "\e[31mPull abortado. Nenhum ficheiro foi alterado.\e[0m"
       return 1
     fi
   else
     print "\e[32m✅ Sem conflitos detetados! Seguro avançar.\e[0m"
-    print "\e[34m[3/3] A efetuar git pull...\e[0m"
-    git pull "$@"
   fi
+
+  print "\e[34m[3/3] A efetuar git pull...\e[0m"
+  git pull "$@"
 }
 
+# gpall — corre gpull em cada repositório git imediatamente abaixo do diretório atual
 function gpall() {
-  local found_repos=0
+  local dir found_repos=0
 
-  # Iterar por todas as pastas no diretório atual
-  for dir in */; do
-    # Remover a barra final do nome da pasta para apresentação
-    local repo_name="${dir%/}"
-
-    # Verificar se a subpasta é um repositório git (tem uma pasta .git ou é worktree)
-    if [[ -d "$dir/.git" ]] || git -C "$dir" rev-parse --is-inside-work-tree &>/dev/null; then
-      found_repos=1
-      print -P "\n\e[36m========== Repositório: %F{cyan}${repo_name}%f ==========\e[0m"
-      
-      # Entrar na pasta do repositório, executar gpull, e voltar para a pasta original via subshell
-      (
-        cd "$dir" || return
-        gpull "$@"
-      )
-    fi
+  for dir in *(N/); do
+    # -e e não -d: em worktrees/submódulos o .git é um ficheiro
+    [[ -e "$dir/.git" ]] || continue
+    found_repos=1
+    print "\n\e[36m========== Repositório: ${dir} ==========\e[0m"
+    ( cd "$dir" && gpull "$@" )
   done
 
   if (( found_repos == 0 )); then
@@ -150,7 +159,6 @@ alias gpf='git push --force-with-lease'
 alias 'gpf!'='git push --force'
 alias gpsup='git push --set-upstream origin $(current_branch)'
 alias gl='gpull'
-alias gpall='gpall'
 alias ggl='git pull origin $(current_branch)'
 alias ggp='git push origin $(current_branch)'
 alias gf='git fetch'
