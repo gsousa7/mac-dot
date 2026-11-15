@@ -721,7 +721,7 @@ zfo() {
 # =========================================================
 # keys — cheatsheet do window-management (AeroSpace/AltTab/Sketchybar)
 # =========================================================
-typeset -g KEYS_MD="${KEYS_MD:-$HOME/git/personal/mac-dot/cheatsheet.md}"
+typeset -g KEYS_MD="${KEYS_MD:-$HOME/projects/personal/mac-dot/cheatsheet.md}"
 
 _keys_header()  { printf '\n\033[1;36m━━ %s ━━\033[0m\n\n' "$1"; }
 _keys_row()     { printf '  \033[1;33m%-26s\033[0m %s\n' "$1" "$2"; }

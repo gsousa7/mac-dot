@@ -59,11 +59,11 @@ alias ...='cd ../..'
 alias .3='cd ../../..'
 alias .4='cd ../../../..'
 alias .5='cd ../../../../..'
-alias wdir='cd $HOME/work'
-alias gdir='cd $HOME/git'
-alias gpdir='cd $HOME/git/personal'
-alias gwdir='cd $HOME/git/work'
-alias ddir='cd $HOME/git/personal/mac-dot'   # corrigido (era ~/git/mac-dotfiles)
+alias wdir='cd $HOME/projects/work'
+alias gdir='cd $HOME/projects'
+alias gpdir='cd $HOME/projects/personal'
+alias gwdir='cd $HOME/projects/work'
+alias ddir='cd $HOME/projects/personal/mac-dot'   # corrigido (era ~/projects/mac-dotfiles)
 alias zdir='cd $ZDOTDIR'
 
 # ---- editores ----

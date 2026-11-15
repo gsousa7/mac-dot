@@ -13,4 +13,4 @@
 # export GOOGLE_CLOUD_SDK_HOME="$HOME/google-cloud-sdk"
 # [[ -f "$GOOGLE_CLOUD_SDK_HOME/path.zsh.inc" ]] && source "$GOOGLE_CLOUD_SDK_HOME/path.zsh.inc"
 
-# alias wdir='cd $HOME/work/client-x'
+# alias wdir='cd $HOME/projects/work/client-x'
