@@ -27,7 +27,6 @@ LOG_FILE="$BACKUP_DIR/install.log"
 WANT_KUBECTL=1
 WANT_KUBECTX=1
 WANT_AWSCLI=1
-WANT_AZURECLI=1
 WANT_TERRAFORM=0
 WANT_RUST=1
 WANT_ANSIBLE=1
@@ -270,14 +269,6 @@ install_awscli() {
   fi
 }
 
-install_azurecli() {
-  [ "$WANT_AZURECLI" -eq 1 ] || return 0
-  have az && { log "Azure CLI já instalado."; return 0; }
-  log "A instalar Azure CLI..."
-  if [ "$PM" = "brew" ]; then run brew install azure-cli
-  else run_sh 'curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash'; fi
-}
-
 # =========================================================
 # kubectl
 # =========================================================
@@ -500,7 +491,6 @@ prompt_tool_selection() {
   ask_yn "kubectl"                              WANT_KUBECTL
   ask_yn "kubectx/kubens"                       WANT_KUBECTX
   ask_yn "AWS CLI"                               WANT_AWSCLI
-  ask_yn "Azure CLI"                             WANT_AZURECLI
   ask_yn "Terraform"                             WANT_TERRAFORM
   ask_yn "Rust/Cargo"                            WANT_RUST
   ask_yn "Ansible"                               WANT_ANSIBLE
@@ -565,7 +555,6 @@ case "$action" in
     install_pipx_tools
     install_ansible
     install_awscli
-    install_azurecli
     install_kubectl
     install_kubectx
     install_terraform
